@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI চ্যাট সহায়ক</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .ai-message {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.6;
+            font-size: 15px;
+            white-space: pre-wrap;
+            position: relative;
+        }
+
+        .user-message .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .ai-message .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .speaker-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .input-area {
+            padding: 15px;
+            background: white;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 15px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #micBtn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        🤖 OpenRouter AI চ্যাট সহায়ক
+    </div>
+
+    <div class="chat-box" id="chatBox">
+        <div>
+            👋 স্বাগতম! আমি আপনার AI সহায়ক। বাংলায় প্রশ্ন করুন।
+        </div>
+    </div>
+
+    <div class="input-area">
+        <button id="micBtn" class="btn">🎤</button>
+        <input type="text" id="userInput" placeholder="আপনার প্রশ্ন লিখুন...">
+        <button class="btn" onclick="sendMessage()">পাঠান</button>
+    </div>
+</div>
+
+<script>
+const OPENROUTER_API_KEY = "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";
+const AI_MODEL = "mistralai/mistral-7b-instruct:free";
+
+const chatBox = document.getElementById("chatBox");
+const userInput = document.getElementById("userInput");
+
+let conversationHistory = [];
+
+async function sendMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    addMessage(message, "user");
+    conversationHistory.push({ role: "user", content: message });
+    userInput.value = "";
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + OPENROUTER_API_KEY
+        },
+        body: JSON.stringify({
+            model: AI_MODEL,
+            messages: conversationHistory
+        })
+    });
+
+    const data = await response.json();
+    const aiText = data.choices[0].message.content;
+
+    addMessage(aiText, "ai");
+    conversationHistory.push({ role: "assistant", content: aiText });
+}
+
+function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = "message " + type + "-message";
+    div.innerHTML = "<div class='message-content'>" + text + "</div>";
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+</script>
+
+</body>
+</html>
